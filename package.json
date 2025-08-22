@@ -1,0 +1,15 @@
+{
+  "name": "site-atrio-online",
+  "private": true,
+  "type": "module",
+  "version": "4.0.2",
+  "scripts": {
+    "dev": "netlify dev"
+  },
+  "dependencies": {
+    "busboy": "^1.6.0",
+    "fluent-ffmpeg": "^2.1.2",
+    "@ffmpeg-installer/ffmpeg": "^1.1.0",
+    "@ffprobe-installer/ffprobe": "^1.4.1"
+  }
+}

@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Publish — Mosaico & Sequencial (v2 Otimizado)</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800;900&family=Poppins:wght@300;400;600;800&family=Montserrat:wght@300;500;700;900&family=Bebas+Neue&family=Oswald:wght@300;500;700&family=Playfair+Display:wght@500;700&family=Space+Grotesk:wght@400;600;700&family=Roboto+Condensed:wght@300;400;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --bg:#0b0b0f; --ink:#fff; --panel:#141420ee; --line:rgba(255,255,255,.12);
+      --brand:#5674ff; --accent:#19c37d; --danger:#ff5d5d; --muted:#9aa0bf;
+    }
+    *{box-sizing:border-box} html,body{height:100%}
+    body{
+      margin:0;color:var(--ink);
+      background:var(--bg) url('plano-de-fundo.png') center center repeat-x;
+      background-size:auto 100%;
+      font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+      display:grid;grid-template-rows:auto 1fr;
+    }
+    header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--line);background:#0f0f14}
+    h1{margin:0;font-size:16px;font-weight:900;letter-spacing:.02em}
+    .btn{border:1px solid var(--line);background:transparent;color:#fff;padding:8px 10px;border-radius:10px;cursor:pointer;font-weight:700}
+    .btn.primary{background:var(--brand);border-color:transparent}
+    .btn.accent{background:var(--accent);border-color:transparent}
+    .btn.danger{background:var(--danger);border-color:transparent}
+    .btn:disabled{background:var(--muted);color:#333;cursor:not-allowed;border-color:transparent}
+    main{display:grid;grid-template-columns:1fr 420px;gap:12px;padding:12px;height:100%}
+    .panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px;min-height:0;display:flex;flex-direction:column;gap:12px}
+    .hint{font-size:12px;color:var(--muted)} .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+    .composer{display:grid;grid-template-columns:460px 1fr;gap:16px;height:100%}
+    .stageWrap{flex:1;display:flex;align-items:center;justify-content:center;min-width:0}
+    .canvasShell{position:relative;display:flex;justify-content:center;align-items:center;width:100%}
+    canvas{
+      background:#000;border:2px solid #2a2a3a;border-radius:16px;display:block;
+      aspect-ratio:1080/1920;height:min(92vh,1200px);width:auto;max-width:100%
+    }
+    #thumbs,#plist{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px}
+    #plist{grid-template-columns:repeat(4,1fr)}
+    .thumb,.pitem{position:relative;border:1px solid rgba(255,255,255,.15);border-radius:10px;overflow:hidden;background:#0e0e16;cursor:pointer}
+    .thumb img,.thumb video,.pitem video{display:block;width:100%;height:140px;object-fit:cover}
+    .badge{position:absolute;top:6px;left:6px;background:rgba(0,0,0,.6);padding:2px 6px;border-radius:8px;font-size:11px}
+    .ops{position:absolute;bottom:6px;right:6px;display:flex;gap:6px}
+    .opbtn{font-size:11px;padding:4px 6px;border-radius:6px;border:1px solid rgba(255,255,255,.25);background:rgba(0,0,0,.5);cursor:pointer}
+    .dropzone{border:2px dashed rgba(255,255,255,.3);border-radius:12px;padding:10px;text-align:center;color:#cfd0e3}
+    .dropzone.drag{background:rgba(255,255,255,.06)}
+    input,select{margin:4px 0;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,.14);background:#0e0e16;color:#fff}
+    input[type=range]{width:100%} label{display:block;font-size:12px;color:#d8daf1;margin-top:6px} .tiny{font-size:11px;color:var(--muted)}
+    .pill{padding:4px 8px;border-radius:999px;border:1px solid var(--line)}
+    .sectionTitle{margin:10px 0 0}
+    progress{width:100%;-webkit-appearance:none;appearance:none;height:6px;border-radius:99px;overflow:hidden;border:none}
+    progress::-webkit-progress-bar{background-color:rgba(255,255,255,.1)}
+    progress::-webkit-progress-value{background-color:var(--accent)}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Publish — Mosaico & Sequencial (v2 Otimizado)</h1>
+    <div class="row">
+      <button class="btn" id="btnJpgTop">Exportar JPEG</button>
+      <button class="btn" id="btnWebmTop">Exportar WEBM</button>
+      <button class="btn primary" id="btnMp4Top">Exportar MP4 (WhatsApp)</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="panel">
+      <div class="composer">
+        <div class="panel" id="leftPanel">
+          <strong>Canvas 1080×1920</strong>
+          <div class="hint">Mantenha a proporção perfeita. Fundo <b>plano-de-fundo.png</b> (repeat-x) na mesma pasta.</div>
+
+          <h3 class="sectionTitle">Modo de composição</h3>
+          <div class="grid2">
+            <label>Modo
+              <select id="modeSelect">
+                <option value="mosaic" selected>Mosaico (1–3 na tela)</option>
+                <option value="sequential">Sequencial (playlist infinita)</option>
+              </select>
+            </label>
+            <label>FPS <input type="number" id="fps" min="12" max="60" step="1" value="30"></label>
+          </div>
+
+          <div id="mosaicBlock">
+            <h3 class="sectionTitle">Mosaico (1–3 mídias)</h3>
+            <input type="file" id="fileInput" accept="image/*,video/*" multiple hidden>
+            <div class="row">
+              <button class="btn" id="btnImport">Importar</button>
+              <button class="btn" id="btnClear">Limpar</button>
+              <span class="pill">até 3 arquivos</span>
+            </div>
+            <div id="dz" class="dropzone">Arraste arquivos aqui (até 3)</div>
+            <div id="thumbs"></div>
+
+            <h3 class="sectionTitle">Slot selecionado</h3>
+            <div class="grid2">
+              <label>Slot
+                <select id="slotSelect"><option value="0">1</option><option value="1">2</option><option value="2">3</option></select>
+              </label>
+              <label>Fit
+                <select id="fitSelect"><option value="cover">Cover</option><option value="contain">Contain</option></select>
+              </label>
+            </div>
+            <label>Zoom <input type="range" id="slotZoom" min="0.5" max="3" step="0.01" value="1"></label>
+            <div class="grid2">
+              <label>Offset X <input type="range" id="slotOffX" min="-800" max="800" step="1" value="0"></label>
+              <label>Offset Y <input type="range" id="slotOffY" min="-800" max="800" step="1" value="0"></label>
+            </div>
+            <div class="grid2">
+              <label>Duração (s, mosaico) <input type="number" id="durMosaic" min="1" max="300" step="1" value="6"></label>
+              <div></div>
+            </div>
+          </div>
+
+          <div id="seqBlock" style="display:none">
+            <h3 class="sectionTitle">Sequencial (playlist de vídeos)</h3>
+            <input type="file" id="seqInput" accept="video/*" multiple hidden>
+            <div class="row">
+              <button class="btn" id="btnAddSeq">Adicionar vídeos</button>
+              <button class="btn" id="btnClearSeq">Limpar playlist</button>
+              <span class="pill">ilimitado</span>
+            </div>
+            <div id="plist" class="dropzone"></div>
+            <div class="grid3">
+              <label>Loops da playlist <input type="number" id="seqLoops" min="1" max="50" step="1" value="1"></label>
+              <label>Fit
+                <select id="seqFit"><option value="cover">Cover</option><option value="contain">Contain</option></select>
+              </label>
+              <label>Zoom <input type="range" id="seqZoom" min="0.5" max="3" step="0.01" value="1"></label>
+            </div>
+            <div class="grid2">
+              <label>Offset X <input type="range" id="seqOffX" min="-800" max="800" step="1" value="0"></label>
+              <label>Offset Y <input type="range" id="seqOffY" min="-800" max="800" step="1" value="0"></label>
+            </div>
+            <div class="tiny">A playlist toca vídeo por vídeo em sequência. Na exportação, usamos a soma das durações × loops.</div>
+          </div>
+
+          <h3 class="sectionTitle">Textos</h3>
+          <div class="row">
+            <button class="btn" id="addText">+ Texto</button>
+            <button class="btn" id="toggleGuides">Guias</button>
+          </div>
+          <div id="textList"></div>
+
+          <h3 class="sectionTitle">Overlay (sobrepostos)</h3>
+          <div class="row">
+            <label>Modo
+              <select id="overlayMode">
+                <option value="off" selected>Desligado</option>
+                <option value="crop">Crop quadrado</option>
+                <option value="free">Imagem livre</option>
+              </select>
+            </label>
+            <input type="file" id="overlayInput" accept="image/*" hidden>
+            <button class="btn" id="overlayLoad">Carregar</button>
+            <button class="btn" id="overlayClear">Remover</button>
+          </div>
+          <label>Tamanho base (px) <input type="range" id="overlaySize" min="120" max="1080" step="10" value="420"></label>
+          <label>Zoom <input type="range" id="overlayZoom" min="0.5" max="3" step="0.01" value="1"></label>
+          <div class="grid2">
+            <label>Pos. X <input type="range" id="overlayX" min="0" max="1080" step="1" value="540"></label>
+            <label>Pos. Y <input type="range" id="overlayY" min="0" max="1920" step="1" value="960"></label>
+          </div>
+          <div class="grid2">
+            <label>Raio <input type="range" id="overlayRadius" min="0" max="120" step="1" value="22"></label>
+            <label>Sombra <input type="range" id="overlayShadow" min="0" max="60" step="1" value="28"></label>
+          </div>
+          <div class="tiny">Arraste o overlay no canvas. <b>Shift</b> + arrastar: mover a imagem interna.</div>
+
+          <h3 class="sectionTitle">Exportar</h3>
+          <div class="grid2">
+            <button class="btn accent" id="exportJPG">JPEG</button>
+            <button class="btn" id="exportWEBM">WEBM</button>
+          </div>
+          <div class="grid2">
+            <button class="btn" id="exportMP4Fast">MP4 rápido</button>
+            <button class="btn primary" id="exportMP4WA">MP4 WhatsApp-ready</button>
+          </div>
+          <div class="tiny" id="status">Pronto. A conversão de vídeo será feita pelo servidor (mais rápido!).</div>
+          <progress id="progressBar" value="0" max="100"></progress>
+        </div>
+
+        <div class="stageWrap">
+          <div class="canvasShell">
+            <canvas id="stage" width="1080" height="1920"></canvas>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    // ======== State ========
+    const W=1080,H=1920; const C=document.getElementById('stage'); const ctx=C.getContext('2d');
+    const statusEl=document.getElementById('status');
+    const progressBar=document.getElementById('progressBar');
+    let mode='mosaic';
+
+    // MOSAICO (1-3)
+    const slots=[null,null,null]; let selected=0;
+
+    // SEQUENCIAL (playlist)
+    const playlist=[]; let seqIndex=0;
+    const seqState={fit:'cover',scale:1,offX:0,offY:0,loops:1};
+
+    // TEXTOS & overlay
+    const texts=[]; let textId=1; let showGuides=false;
+    const overlay={mode:'off',el:null,size:420,x:540,y:960,radius:22,shadow:28,zoom:1,panX:0,panY:0};
+
+    // ======== UI refs ========
+    const allExportButtons = [];
+    const modeSelect=gid('modeSelect'); const fpsEl=gid('fps');
+    const mosaicBlock=gid('mosaicBlock'); const seqBlock=gid('seqBlock');
+    const fileInput=gid('fileInput'), btnImport=gid('btnImport'), btnClear=gid('btnClear');
+    const slotSelect=gid('slotSelect'), fitSelect=gid('fitSelect'), slotZoom=gid('slotZoom'), slotOffX=gid('slotOffX'), slotOffY=gid('slotOffY');
+    const thumbs=gid('thumbs'); const dz=gid('dz'); const durMosaic=gid('durMosaic');
+    const addTextBtn=gid('addText'), toggleGuidesBtn=gid('toggleGuides'), textList=gid('textList');
+    const overlayMode=gid('overlayMode'), overlayInput=gid('overlayInput'), overlayLoad=gid('overlayLoad'), overlayClear=gid('overlayClear');
+    const overlaySize=gid('overlaySize'), overlayZoom=gid('overlayZoom'), overlayX=gid('overlayX'), overlayY=gid('overlayY'), overlayRadius=gid('overlayRadius'), overlayShadow=gid('overlayShadow');
+    const exportJPG=gid('exportJPG'), exportWEBM=gid('exportWEBM'), exportMP4Fast=gid('exportMP4Fast'), exportMP4WA=gid('exportMP4WA');
+    const btnJpgTop=gid('btnJpgTop'), btnWebmTop=gid('btnWebmTop'), btnMp4Top=gid('btnMp4Top');
+    allExportButtons.push(exportJPG, exportWEBM, exportMP4Fast, exportMP4WA, btnJpgTop, btnWebmTop, btnMp4Top);
+
+    const seqInput=gid('seqInput'), btnAddSeq=gid('btnAddSeq'), btnClearSeq=gid('btnClearSeq'), plist=gid('plist'); const seqLoops=gid('seqLoops'), seqFit=gid('seqFit'), seqZoom=gid('seqZoom'), seqOffX=gid('seqOffX'), seqOffY=gid('seqOffY');
+
+    btnJpgTop.onclick=()=>exportJPG.click();
+    btnWebmTop.onclick=()=>exportWEBM.click();
+    btnMp4Top.onclick=()=>exportMP4WA.click();
+
+    function gid(id){return document.getElementById(id)}
+    function setExportButtonsState(enabled) {
+      allExportButtons.forEach(btn => btn.disabled = !enabled);
+    }
+
+    // ======== Modo ========
+    modeSelect.oninput=()=>{ mode=modeSelect.value; if(mode==='mosaic'){ mosaicBlock.style.display='block'; seqBlock.style.display='none'; } else { mosaicBlock.style.display='none'; seqBlock.style.display='block'; } };
+
+    // ======== Import mosaico ========
+    btnImport.onclick=()=>fileInput.click();
+    btnClear.onclick=()=>{ for(let i=0;i<3;i++){ if(slots[i]?.kind==='video') try{slots[i].el.pause()}catch{} slots[i]=null; } renderThumbs(); };
+    fileInput.addEventListener('change', async e=>{ await handleFilesMosaic(e.target.files); fileInput.value=''; });
+    ;['dragenter','dragover','dragleave','drop'].forEach(ev=>dz.addEventListener(ev,(e)=>{ e.preventDefault(); e.stopPropagation(); }));
+    dz.addEventListener('dragover',()=>dz.classList.add('drag'));
+    dz.addEventListener('dragleave',()=>dz.classList.remove('drag'));
+    dz.addEventListener('drop', async (e)=>{ dz.classList.remove('drag'); await handleFilesMosaic(e.dataTransfer.files); });
+
+    async function handleFilesMosaic(list){
+      if(!list||!list.length) return;
+      const room=3-slots.filter(Boolean).length; const files=[...list].slice(0,room);
+      for(const f of files){ const idx=slots.findIndex(s=>!s); if(idx===-1) break; await loadIntoSlot(f,idx); }
+      selected=0; slotSelect.value='0'; syncSlotUI(); renderThumbs();
+    }
+
+    function loadIntoSlot(file,idx){
+      return new Promise((resolve)=>{
+        const url=URL.createObjectURL(file);
+        if(file.type.startsWith('image/')){
+          const img=new Image();
+          img.onload=()=>{ slots[idx]={kind:'image',el:img,name:file.name,scale:1,offX:0,offY:0,fit:'cover'}; resolve(); };
+          img.onerror=()=>{setStatus('Falha imagem: '+file.name); resolve();};
+          img.src=url;
+        } else if(file.type.startsWith('video/')){
+          const v=document.createElement('video');
+          v.muted=true; v.loop=true; v.preload='auto'; v.playsInline=true; v.src=url;
+          v.addEventListener('loadeddata',async()=>{ try{await v.play();}catch{} slots[idx]={kind:'video',el:v,name:file.name,scale:1,offX:0,offY:0,fit:'cover'}; resolve(); });
+          v.onerror=()=>{setStatus('Falha vídeo: '+file.name); resolve();};
+        } else { setStatus('Ignorado: '+file.name); resolve(); }
+      });
+    }
+
+    function renderThumbs(){
+      thumbs.innerHTML='';
+      for(let i=0;i<3;i++){
+        const s=slots[i]; const card=doc('div','thumb'); card.dataset.i=i;
+        const badge=doc('div','badge'); badge.textContent=s?(s.kind==='image'?'IMG':'VID'):'vazio'; card.appendChild(badge);
+        const ops=doc('div','ops');
+        const b1=docBtn('selecionar',()=>{selected=i; slotSelect.value=String(i); syncSlotUI();});
+        const b2=docBtn('remover',()=>{ if(slots[i]?.kind==='video') try{slots[i].el.pause()}catch{} slots[i]=null; renderThumbs(); });
+        ops.append(b1,b2); card.appendChild(ops);
+        if(s){
+          if(s.kind==='image'){
+            const im=new Image(); im.src=s.el.src; im.style.width='100%'; im.style.height='140px'; im.style.objectFit='cover'; card.appendChild(im);
+          } else {
+            const v=document.createElement('video'); v.src=s.el.src; v.muted=true; v.loop=true; v.playsInline=true; v.onloadeddata=()=>{ try{v.play();}catch{} }; v.style.width='100%'; v.style.height='140px'; v.style.objectFit='cover'; card.appendChild(v);
+          }
+        }
+        thumbs.appendChild(card);
+      }
+    }
+    function doc(tag,cls){ const el=document.createElement(tag); if(cls) el.className=cls; return el; }
+    function docBtn(txt,fn){ const b=document.createElement('button'); b.className='opbtn'; b.textContent=txt; b.onclick=fn; return b; }
+
+    slotSelect.oninput=()=>{selected=parseInt(slotSelect.value,10); syncSlotUI();};
+    fitSelect.oninput =()=>{ const s=slots[selected]; if(s) s.fit=fitSelect.value; };
+    slotZoom.oninput  =()=>{ const s=slots[selected]; if(s) s.scale=parseFloat(slotZoom.value); };
+    slotOffX.oninput  =()=>{ const s=slots[selected]; if(s) s.offX=parseFloat(slotOffX.value); };
+    slotOffY.oninput  =()=>{ const s=slots[selected]; if(s) s.offY=parseFloat(slotOffY.value); };
+    function syncSlotUI(){ const s=slots[selected]||{scale:1,offX:0,offY:0,fit:'cover'}; slotZoom.value=s.scale; slotOffX.value=s.offX; slotOffY.value=s.offY; fitSelect.value=s.fit; }
+
+    // ======== SEQUENCIAL ========
+    btnAddSeq.onclick=()=>seqInput.click();
+    btnClearSeq.onclick=()=>{ for(const it of playlist){ try{it.el.pause();}catch{} } playlist.length=0; renderPlaylist(); };
+    seqInput.addEventListener('change', async e=>{ await handleFilesSeq(e.target.files); seqInput.value=''; });
+
+    async function handleFilesSeq(list){
+      if(!list||!list.length) return;
+      const arr=[...list];
+      for(const f of arr){
+        if(!f.type.startsWith('video/')){ setStatus('Ignorado (não é vídeo): '+f.name); continue; }
+        await new Promise((resolve)=>{
+          const url=URL.createObjectURL(f); const v=document.createElement('video');
+          v.muted=true; v.preload='auto'; v.playsInline=true; v.src=url;
+          v.addEventListener('loadedmetadata',()=>{
+            playlist.push({kind:'video',el:v,name:f.name,duration:Math.max(0.1,v.duration||0)});
+            resolve();
+          });
+          v.onerror=()=>{ setStatus('Falha vídeo: '+f.name); resolve(); };
+        });
+      }
+      renderPlaylist();
+    }
+
+    function renderPlaylist(){
+      plist.innerHTML='';
+      playlist.forEach((it,idx)=>{
+        const card=doc('div','pitem');
+        const badge=doc('div','badge'); badge.textContent='VID'; card.appendChild(badge);
+        const v=document.createElement('video'); v.src=it.el.src; v.muted=true; v.playsInline=true; v.onloadeddata=()=>{ try{v.play();}catch{} }; v.loop=true; v.style.height='120px'; v.style.objectFit='cover'; card.appendChild(v);
+        const ops=doc('div','ops');
+        ops.appendChild(makeSmallBtn('↑',()=>{ if(idx>0){ const t=playlist[idx]; playlist.splice(idx,1); playlist.splice(idx-1,0,t); renderPlaylist(); } }));
+        ops.appendChild(makeSmallBtn('↓',()=>{ if(idx<playlist.length-1){ const t=playlist[idx]; playlist.splice(idx,1); playlist.splice(idx+1,0,t); renderPlaylist(); } }));
+        ops.appendChild(makeSmallBtn('x',()=>{ try{playlist[idx].el.pause();}catch{} playlist.splice(idx,1); renderPlaylist(); }));
+        card.appendChild(ops); plist.appendChild(card);
+      });
+    }
+    function makeSmallBtn(t,fn){ const b=document.createElement('button'); b.className='opbtn'; b.textContent=t; b.onclick=fn; return b; }
+    seqLoops.oninput=()=>{ seqState.loops=clamp(int(seqLoops.value,1),1,50); };
+    seqFit.oninput=()=>{ seqState.fit=seqFit.value; };
+    seqZoom.oninput=()=>{ seqState.scale=parseFloat(seqZoom.value)||1; };
+    seqOffX.oninput=()=>{ seqState.offX=parseFloat(seqOffX.value)||0; };
+    seqOffY.oninput=()=>{ seqState.offY=parseFloat(seqOffY.value)||0; };
+
+    // ======== Textos ========
+    addTextBtn.onclick=()=>{ const t={id:textId++, text:'Seu texto aqui', font:'Inter', size:72, color:'#ffffff', x:W*0.1, y:H*0.15, align:'left', weight:800}; texts.push(t); renderTextList(); };
+    function renderTextList(){
+      textList.innerHTML='';
+      texts.forEach((t)=>{
+        const wrap=doc('div','panel'); wrap.style.padding='8px'; wrap.style.margin='6px 0';
+        wrap.innerHTML=`<div class="row" style="justify-content:space-between"><b>Texto ${t.id}</b><button class="btn" data-del>Remover</button></div>
+          <label>Conteúdo <input type="text" data-k="text" value="${t.text.replace(/&/g,'&amp;').replace(/\\"/g,'&quot;')}"></label>
+          <div class="grid2">
+            <label>Fonte <select data-k="font">${['Inter','Poppins','Montserrat','Bebas Neue','Oswald','Playfair Display','Space Grotesk','Roboto Condensed'].map(f=>`<option ${f===t.font?'selected':''}>${f}</option>`).join('')}</select></label>
+            <label>Tamanho <input type="number" data-k="size" min="8" max="400" value="${t.size}"></label>
+          </div>
+          <div class="grid2">
+            <label>Cor <input type="color" data-k="color" value="${t.color}"></label>
+            <label>Peso <select data-k="weight">${[300,400,600,800,900].map(w=>`<option value="${w}" ${w==t.weight?'selected':''}>${w}</option>`).join('')}</select></label>
+          </div>
+          <div class="grid2">
+            <label>X <input type="number" data-k="x" value="${Math.round(t.x)}"></label>
+            <label>Y <input type="number" data-k="y" value="${Math.round(t.y)}"></label>
+          </div>
+          <label>Alinhamento <select data-k="align">${['left','center','right'].map(a=>`<option ${a===t.align?'selected':''}>${a}</option>`).join('')}</select></label>`;
+        wrap.querySelector('[data-del]').onclick=()=>{ const i=texts.findIndex(x=>x.id===t.id); if(i>-1){texts.splice(i,1); renderTextList();} };
+        wrap.querySelectorAll('input,select').forEach(el=>{ el.oninput=()=>{ const k=el.dataset.k; if(['size','x','y','weight'].includes(k)) t[k]=parseFloat(el.value); else t[k]=el.value; }; });
+        textList.appendChild(wrap);
+      });
+    }
+
+    // ======== Drag textos / overlay ========
+    let drag={on:false,id:null,dx:0,dy:0,target:'none'};
+    C.addEventListener('pointerdown',(e)=>{
+      const {x,y}=toXY(e);
+      const b=boundsOverlay();
+      if(b && hit(b,x,y)){
+        if(e.shiftKey){ drag={on:true,id:null,dx:x,dy:y,target:'overlayPan'}; }
+        else { drag={on:true,id:null,dx:x-overlay.x,dy:y-overlay.y,target:'overlayMove'}; }
+        C.setPointerCapture(e.pointerId); return;
+      }
+      for(let i=texts.length-1;i>=0;i--){
+        const t=texts[i]; ctx.save(); ctx.font=`${t.weight} ${t.size}px ${t.font}, Inter, sans-serif`;
+        const w=ctx.measureText(t.text).width; const h=t.size*1.2; let tx=t.x; if(t.align==='center') tx-=w/2; else if(t.align==='right') tx-=w; const ty=t.y-t.size; ctx.restore();
+        if(x>=tx-10&&x<=tx+w+10&&y>=ty-10&&y<=ty+h+10){ drag={on:true,id:t.id,dx:x-t.x,dy:y-t.y,target:'text'}; C.setPointerCapture(e.pointerId); return; }
+      }
+    });
+    C.addEventListener('pointermove',(e)=>{
+      if(!drag.on) return; const {x,y}=toXY(e);
+      if(drag.target==='overlayMove'){ overlay.x=x-drag.dx; overlay.y=y-drag.dy; }
+      else if(drag.target==='overlayPan'){ overlay.panX+=(x-drag.dx); overlay.panY+=(y-drag.dy); drag.dx=x; drag.dy=y; }
+      else if(drag.target==='text'){ const t=texts.find(v=>v.id===drag.id); if(t){ t.x=x-drag.dx; t.y=y-drag.dy; } }
+    });
+    C.addEventListener('pointerup',(e)=>{ drag={on:false,id:null,dx:0,dy:0,target:'none'}; try{C.releasePointerCapture(e.pointerId)}catch{} });
+    function toXY(e){ const r=C.getBoundingClientRect(); const sx=C.width/r.width, sy=C.height/r.height; return {x:(e.clientX-r.left)*sx, y:(e.clientY-r.top)*sy}; }
+    function hit(b,x,y){return x>=b.x && x<=b.x+b.w && y>=b.y && y<=b.y+b.h}
+
+    // ======== Overlay ========
+    overlayLoad.onclick=()=>overlayInput.click();
+    overlayInput.onchange=e=>{
+      const f=e.target.files?.[0]; if(!f) return; const img=new Image();
+      img.onload=()=>{ overlay.el=img; overlay.panX=0; overlay.panY=0; if(overlay.mode==='off'){ overlay.mode='crop'; overlayMode.value='crop'; } };
+      img.src=URL.createObjectURL(f);
+    };
+    overlayClear.onclick=()=>{ overlay.el=null; };
+    overlayMode.oninput=()=>overlay.mode=overlayMode.value;
+    overlaySize.oninput=()=>overlay.size=parseFloat(overlaySize.value)||420;
+    overlayZoom.oninput=()=>overlay.zoom=parseFloat(overlayZoom.value)||1;
+    overlayX.oninput=()=>overlay.x=parseFloat(overlayX.value)||0;
+    overlayY.oninput=()=>overlay.y=parseFloat(overlayY.value)||0;
+    overlayRadius.oninput=()=>overlay.radius=parseFloat(overlayRadius.value)||0;
+    overlayShadow.oninput=()=>overlay.shadow=parseFloat(overlayShadow.value)||0;
+    function boundsOverlay(){
+      if(!overlay.el||overlay.mode==='off') return null;
+      if(overlay.mode==='crop'){ const s=Math.min(overlay.size,W); return {x:overlay.x-s/2,y:overlay.y-s/2,w:s,h:s}; }
+      else { const base=Math.min(overlay.size/overlay.el.width, overlay.size/overlay.el.height); const w=overlay.el.width*base*overlay.zoom; const h=overlay.el.height*base*overlay.zoom; return {x:overlay.x-w/2,y:overlay.y-h/2,w,h}; }
+    }
+
+    // ======== Export (Comunicação com a função Netlify) ========
+    const API_URL = '/.netlify/functions/convert';
+
+    exportJPG.onclick=async()=>{
+      setExportButtonsState(false);
+      setStatus('Exportando JPEG...');
+      await ensureFonts();
+      download(C.toDataURL('image/jpeg',0.95), `publish_${Date.now()}.jpg`);
+      setStatus('JPEG exportado.');
+      setExportButtonsState(true);
+    };
+
+    exportWEBM.onclick=async()=>{
+        setExportButtonsState(false);
+        await ensureFonts();
+        const fps=clamp(int(fpsEl.value,30),12,60);
+        ensureVideos();
+        if(mode==='mosaic'){
+            const dur=clamp(int(durMosaic.value,6),1,300);
+            setStatus('Gravando WEBM (mosaico)...');
+            const blob=await recordGeneric('webm',fps,dur);
+            await uploadAndDownload(blob, 'webm');
+        } else {
+            const total=await getSeqTotalDuration();
+            setStatus('Gravando WEBM (sequencial)...');
+            const blob=await recordSequential('webm',fps,total);
+            await uploadAndDownload(blob, 'webm');
+        }
+        setExportButtonsState(true);
+    };
+
+    exportMP4Fast.onclick=()=>exportMP4WA.click();
+    exportMP4WA.onclick = async () => {
+      setExportButtonsState(false);
+      progressBar.value = 0;
+      setStatus('Passo 1/2: Gravando vídeo base WEBM...');
+      await ensureFonts();
+      const fps = clamp(int(fpsEl.value, 30), 12, 60);
+      ensureVideos();
+      const dur = (mode === 'mosaic') ? clamp(int(durMosaic.value, 6), 1, 300) : (await getSeqTotalDuration());
+      const webm = (mode === 'mosaic') ? await recordGeneric('webm', fps, dur) : await recordSequential('webm', fps, dur);
+      await uploadAndDownload(webm, 'mp4');
+      setExportButtonsState(true);
+    };
+
+    async function uploadAndDownload(blob, format) {
+      try {
+        setStatus(`Passo 2/2: Enviando e convertendo no servidor (${format.toUpperCase()})...`);
+        const fit = (mode === 'mosaic') ? fitSelect.value : seqFit.value;
+        
+        const formData = new FormData();
+        formData.append('video', blob, `video.${format === 'webm' ? 'webm' : 'mp4'}`);
+        formData.append('fit', fit);
+        formData.append('format', format);
+        formData.append('fps', fpsEl.value);
+
+        const response = await fetch(API_URL, {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`Erro do servidor: ${response.status} - ${errorText}`);
+        }
+
+        const videoBlob = await response.blob();
+        const filename = `publish_${Date.now()}.${format}`;
+        download(URL.createObjectURL(videoBlob), filename);
+        setStatus(`Arquivo ${format.toUpperCase()} exportado com sucesso!`);
+
+      } catch (err) {
+        console.error("Falha na exportação:", err);
+        setStatus(`Erro! A conversão para ${format.toUpperCase()} falhou. Verifique o console.`);
+        alert(`Falha na exportação. Erro: ${err.message}`);
+      } finally {
+        setExportButtonsState(true);
+        progressBar.value = 0;
+      }
+    }
+
+    // ======== Utils export ========
+    function int(v,d){ const n=parseInt(v,10); return Number.isFinite(n)?n:d; }
+    function clamp(v,min,max){ return Math.max(min,Math.min(max,v)); }
+    function ensureVideos(){ for(const s of slots){ if(s?.kind==='video'){ try{s.el.play();}catch{} } } for(const it of playlist){ try{it.el.pause(); it.el.currentTime=0;}catch{} } }
+    async function ensureFonts(){
+      if(!('fonts' in document)) return;
+      const fams=new Set(texts.map(t=>`${t.weight} ${t.size}px ${t.font}`));
+      const promises=[...fams].map(f=>document.fonts.load(f,'A'));
+      try{await Promise.all(promises);}catch{}
+    }
+    function download(url,name){ const a=document.createElement('a'); a.href=url; a.download=name; document.body.appendChild(a); a.click(); a.remove(); }
+    function setStatus(t){ statusEl.textContent=t; }
+
+    // ======== Recorder (mosaico) ========
+    async function recordGeneric(kind,fps,dur){
+      const stream=C.captureStream(fps);
+      const mime = 'video/webm;codecs=vp9';
+      if(!MediaRecorder.isTypeSupported(mime)) throw new Error('MediaRecorder WEBM VP9 não suportado');
+      const rec=new MediaRecorder(stream,{mimeType:mime});
+      const chunks=[];
+      return new Promise((res)=>{
+        rec.ondataavailable=e=>{ if(e.data&&e.data.size>0) chunks.push(e.data); };
+        rec.onstop=()=>{ res(new Blob(chunks,{type:'video/webm'})); };
+        rec.start();
+        setTimeout(()=>{ try{rec.stop();}catch{} }, Math.max(1,dur)*1000);
+      });
+    }
+
+    // ======== Recorder (sequencial) ========
+    async function recordSequential(kind,fps,dur){
+      const stream=C.captureStream(fps);
+      const mime = 'video/webm;codecs=vp9';
+      if(!MediaRecorder.isTypeSupported(mime)) throw new Error('MediaRecorder WEBM VP9 não suportado');
+      
+      seqIndex=0;
+      function startNext(){
+        if(playlist.length===0) return;
+        const v=playlist[seqIndex].el;
+        try{ v.currentTime=0; v.muted=true; v.play(); }catch{}
+      }
+      startNext();
+
+      const rec=new MediaRecorder(stream,{mimeType:mime});
+      const chunks=[]; let elapsed=0; let lastTs=performance.now(); let loop=0;
+      function tick(){
+        const now=performance.now(); const dt=(now-lastTs)/1000; lastTs=now; elapsed+=dt;
+        const cur=playlist[seqIndex]?.el;
+        if(cur && (cur.ended || (cur.duration>0 && cur.currentTime>=cur.duration-0.03))){
+          try{cur.pause();}catch{}
+          seqIndex++;
+          if(seqIndex>=playlist.length){
+            seqIndex=0; loop++;
+            if(loop>=seqState.loops){ /* deixa rolar até dur */ }
+          }
+          startNext();
+        }
+        if(elapsed<dur){ requestAnimationFrame(tick); } else { try{rec.stop();}catch{} }
+      }
+      rec.ondataavailable=e=>{ if(e.data&&e.data.size>0) chunks.push(e.data); };
+      const done=new Promise((res)=>{ rec.onstop=()=>{ res(new Blob(chunks,{type:'video/webm'})); }; });
+      rec.start(); requestAnimationFrame(tick);
+      return await done;
+    }
+
+    // ======== Desenho do canvas ========
+    function draw(){
+      ctx.fillStyle='#000'; ctx.fillRect(0,0,W,H);
+
+      if(mode==='mosaic'){
+        const active=slots.filter(Boolean); const rows=Math.max(1,active.length||1); const rowH=H/rows; let rowIndex=0;
+        for(let i=0;i<3;i++){
+          const s=slots[i]; if(!s) continue; const y0=rowIndex*rowH; rowIndex++;
+          ctx.save(); ctx.beginPath(); ctx.rect(0,y0,W,rowH); ctx.clip();
+          drawSlot(s,0,y0,W,rowH);
+          ctx.restore();
+          if(i<2){ ctx.strokeStyle='rgba(255,255,255,.08)'; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(0,y0+rowH); ctx.lineTo(W,y0+rowH); ctx.stroke(); }
+        }
+      } else {
+        const cur=playlist[seqIndex]?.el;
+        if(cur){
+          const s={kind:'video',el:cur,scale:seqState.scale,offX:seqState.offX,offY:seqState.offY,fit:seqState.fit};
+          drawSlot(s,0,0,W,H);
+        }
+      }
+
+      // textos
+      for(const t of texts){
+        ctx.save();
+        ctx.textAlign=t.align; ctx.textBaseline='alphabetic';
+        ctx.font=`${t.weight} ${t.size}px ${t.font}, Inter, sans-serif`;
+        ctx.fillStyle=t.color; ctx.fillText(t.text,t.x,t.y);
+        ctx.restore();
+      }
+
+      // overlay
+      if(overlay.el && overlay.mode!=='off'){
+        const b=boundsOverlay();
+        if(overlay.shadow>0){
+          ctx.save(); ctx.shadowColor='rgba(0,0,0,0.6)'; ctx.shadowBlur=overlay.shadow;
+          ctx.shadowOffsetX=0; ctx.shadowOffsetY=Math.round(overlay.shadow/3);
+          roundRect(b.x,b.y,b.w,b.h,overlay.radius); ctx.fillStyle='rgba(0,0,0,0.001)'; ctx.fill(); ctx.restore();
+        }
+        ctx.save();
+        if(overlay.mode==='crop'){ roundRect(b.x,b.y,b.w,b.h,overlay.radius); ctx.clip(); }
+        const img=overlay.el; const z=overlay.zoom; let dw,dh,base;
+        if(overlay.mode==='crop'){ base=Math.max(b.w/img.width, b.h/img.height); }
+        else { base=Math.min(b.w/img.width, b.h/img.height); }
+        dw=img.width*base*z; dh=img.height*base*z;
+        const cx=b.x+b.w/2+overlay.panX; const cy=b.y+b.h/2+overlay.panY;
+        const dx=cx-dw/2, dy=cy-dh/2;
+        try{ ctx.drawImage(img,dx,dy,dw,dh); }catch{}
+        ctx.restore();
+      }
+
+      if(showGuides){ ctx.strokeStyle='rgba(255,255,255,.2)'; ctx.strokeRect(0,0,W,H); }
+      requestAnimationFrame(draw);
+    }
+    function drawSlot(s,x0,y0,sw,sh){
+      const el=s.el, sc=s.scale||1, ox=s.offX||0, oy=s.offY||0;
+      let mw=0,mh=0;
+      if(s.kind==='image'){ mw=el.naturalWidth; mh=el.naturalHeight; } else { mw=el.videoWidth||1; mh=el.videoHeight||1; }
+      const sx=sw/mw, sy=sh/mh;
+      let base=(s.fit==='contain')? Math.min(sx,sy) : Math.max(sx,sy);
+      const dw=mw*base*sc, dh=mh*base*sc;
+      const cx=x0+sw/2+ox, cy=y0+sh/2+oy;
+      const dx=cx-dw/2, dy=cy-dh/2;
+      try{ ctx.drawImage(el,dx,dy,dw,dh); }catch{}
+    }
+    function roundRect(x,y,w,h,r){
+      const rr=Math.max(0,Math.min(r,Math.min(w,h)/2));
+      ctx.beginPath();
+      ctx.moveTo(x+rr,y);
+      ctx.arcTo(x+w,y,x+w,y+h,rr);
+      ctx.arcTo(x+w,y+h,x,y+h,rr);
+      ctx.arcTo(x,y+h,x,y,rr);
+      ctx.arcTo(x,y,x+w,y,rr);
+      ctx.closePath();
+    }
+
+    // ======== Interações simples ========
+    toggleGuidesBtn.onclick=()=>{ showGuides=!showGuides; };
+
+    // ======== Helpers ========
+    async function getSeqTotalDuration(){
+      if(playlist.length===0) return 1;
+      let total=0;
+      for(const it of playlist){ const d=Math.max(0.1, it.el.duration || it.duration || 0); total+=d; }
+      return total*seqState.loops;
+    }
+
+    // Start
+    renderThumbs(); renderPlaylist(); requestAnimationFrame(draw);
+  </script>
+</body>
+</html>
+        
