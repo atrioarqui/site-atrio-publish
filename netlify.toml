@@ -12,6 +12,6 @@
     Access-Control-Allow-Methods = "GET, POST, OPTIONS"
     Access-Control-Allow-Headers = "Content-Type"
 
-# Bloco adicionado para aumentar o tempo de execução
 [functions."convert"]
   timeout = 25
+  external_node_modules = ["ffmpeg-static", "ffprobe-static"]
