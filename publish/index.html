@@ -441,7 +441,7 @@
       else { const base=Math.min(overlay.size/overlay.el.width, overlay.size/overlay.el.height); const w=overlay.el.width*base*overlay.zoom; const h=overlay.el.height*base*overlay.zoom; return {x:overlay.x-w/2,y:overlay.y-h/2,w,h}; }
     }
 
-    // ======== Export (Comunicação com a função Netlify) ========
+    // ======== Export (Comunicação com o servidor Render) ========
     const API_URL = 'https://atrio-conversor.onrender.com/convert';
 
     exportJPG.onclick=async()=>{
@@ -456,7 +456,10 @@
     exportWEBM.onclick=async()=>{
         setExportButtonsState(false);
         setStatus('Exportação de WEBM desativada na versão com servidor. Use o MP4.');
-        setTimeout(() => setExportButtonsState(true), 2000);
+        setTimeout(() => {
+          setStatus('Pronto.');
+          setExportButtonsState(true);
+        }, 2000);
     };
 
     exportMP4Fast.onclick=()=>exportMP4WA.click();
