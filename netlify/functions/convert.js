@@ -1,14 +1,14 @@
-
 import Busboy from 'busboy';
 import ffmpeg from 'fluent-ffmpeg';
-import ffmpegPath from '@ffmpeg-installer/ffmpeg';
-import ffprobePath from '@ffprobe-installer/ffprobe';
+import ffmpegStatic from 'ffmpeg-static';
+import ffprobeStatic from 'ffprobe-static';
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
 
-ffmpeg.setFfmpegPath(ffmpegPath.path);
-ffmpeg.setFfprobePath(ffprobePath.path);
+// Define o caminho para os binários do ffmpeg e ffprobe
+ffmpeg.setFfmpegPath(ffmpegStatic);
+ffmpeg.setFfprobePath(ffprobeStatic.path);
 
 export const config = { path: '/convert' };
 
@@ -103,6 +103,13 @@ export async function handler(event) {
       body: base64
     };
   } catch (err) {
-    return { statusCode: 500, headers: cors(), body: `Error: ${err.message}` };
+    return {
+      statusCode: 500,
+      headers: cors(),
+      body: JSON.stringify({
+        errorType: typeof err,
+        errorMessage: err.message
+      })
+    };
   }
 }
