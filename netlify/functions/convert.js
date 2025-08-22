@@ -6,7 +6,7 @@ import fs from 'fs';
 import os from 'os';
 import path from 'path';
 
-// Define o caminho para os binários do ffmpeg e ffprobe
+// Define o caminho para os binários que agora serão incluídos corretamente
 ffmpeg.setFfmpegPath(ffmpegStatic);
 ffmpeg.setFfprobePath(ffprobeStatic.path);
 
@@ -89,7 +89,7 @@ export async function handler(event) {
       cmd.output(outputFile).on('end', resolve).on('error', reject).run();
     });
 
-    const base64 = fs.readFileSync(outputFile).toString('base64');
+    const fileBuffer = fs.readFileSync(outputFile);
     try { fs.unlinkSync(outputFile); fs.unlinkSync(inputFile); } catch {}
 
     return {
@@ -100,14 +100,15 @@ export async function handler(event) {
         'Content-Disposition': `attachment; filename="converted_1080x1920.${format==='webm'?'webm':'mp4'}"`
       },
       isBase64Encoded: true,
-      body: base64
+      body: fileBuffer.toString('base64')
     };
   } catch (err) {
+    console.error('Function Error:', err);
     return {
       statusCode: 500,
       headers: cors(),
       body: JSON.stringify({
-        errorType: typeof err,
+        errorType: err.constructor.name,
         errorMessage: err.message
       })
     };
